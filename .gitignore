@@ -1,0 +1,50 @@
+# Kernel module build artifacts
+*.o
+*.ko
+*.mod.c
+*.mod.o
+*.cmd
+*.symvers
+modules.order
+Module.symvers
+.tmp_versions/
+dht11_test
+
+# Autotools generated files
+aclocal.m4
+autom4te.cache/
+compile
+config.guess
+config.h.in
+config.sub
+configure
+depcomp
+install-sh
+ltmain.sh
+missing
+mkinstalldirs
+ar-lib
+config.log
+config.status
+libtool
+stamp-h1
+Makefile.in
+*.la
+*.lo
+
+# Executables
+rpc_client
+rpc_server
+
+# Editor temporary files
+.*.swp
+.*.swn
+.*.swo
+
+# Archive
+*.tar.bz2
+
+# Build directories
+tmp/
+.libs/
+.deps/
