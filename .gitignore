@@ -33,8 +33,8 @@ Makefile.in
 *.lo
 
 # Executables
-rpc_client
-rpc_server
+json-rpc_control-hardware/rpc_client/rpc_client
+json-rpc_control-hardware/rpc_server/rpc_server
 
 # Editor temporary files
 .*.swp

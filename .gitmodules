@@ -1,0 +1,6 @@
+[submodule "json-rpc_control-hardware/libev"]
+	path = json-rpc_control-hardware/libev
+	url = https://github.com/enki/libev.git
+[submodule "json-rpc_control-hardware/jsonrpc-c"]
+	path = json-rpc_control-hardware/jsonrpc-c
+	url = https://github.com/hmng/jsonrpc-c.git
