@@ -11,9 +11,7 @@
 
 ## 系统架构
 
-```
-<img width="2848" height="1600" alt="智能家居系统架构图" src="https://github.com/user-attachments/assets/be28d81b-c130-4365-97f6-4ac3b4780b98" />
-
+```<img width="2848" height="1600" alt="智能家居系统架构图" src="https://github.com/user-attachments/assets/11569124-465e-41c4-9670-14ad526e4397" />
 ```
 
 ### 通信协议分层
