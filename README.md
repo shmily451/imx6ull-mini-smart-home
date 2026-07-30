@@ -174,6 +174,7 @@ mknod /dev/mydht11 c 247 0
 4. 中断服务程序记录 84 个时间戳，解析温度/湿度
 5. CRC 校验通过后存入环形缓冲区，唤醒用户进程
 
-## 许可证
+## 效果展示
 
-GPL v2
+<img width="2047" height="1279" alt="e1d0c08ef38a13590b37bdab7630e5a2" src="https://github.com/user-attachments/assets/8bcde1d5-aa74-4ceb-8131-4d637f71891d" />
+
