@@ -1,4 +1,4 @@
-var MQTT_WS_URL = "wss://broker.emqx.io:8084/mqtt";
+var MQTT_WS_URL = "ws://192.168.1.200:8083/mqtt";
 var TOPIC_TEMP = "smart-home/dht11/temperature";
 var TOPIC_HUMI = "smart-home/dht11/humidity";
 var TOPIC_LED = "smart-home/led";

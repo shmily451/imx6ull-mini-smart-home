@@ -48,3 +48,9 @@ json-rpc_control-hardware/rpc_server/rpc_server
 tmp/
 .libs/
 .deps/
+
+# Wei Dongshan original project files
+06_智能家居产品设计/
+
+# Paho MQTT source (cross-compiled locally, not included)
+paho.mqtt.c/

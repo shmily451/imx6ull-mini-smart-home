@@ -2,35 +2,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <fcntl.h>
-#include <errno.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include "mqtt.h"
+#include <pthread.h>
+#include "MQTTClient.h"
 
-#define DHT11_DEVICE "/dev/mydht11"
+#define DHT11_DEVICE  "/dev/mydht11"
 #define LED_BRIGHTNESS "/sys/class/leds/sys-led/brightness"
 
-#define BROKER_HOST "broker.emqx.io"
-#define BROKER_PORT 1883
-#define CLIENT_ID "imx6ull_dht11"
+#define ADDRESS     "tcp://192.168.1.200:1883"
+#define CLIENTID    "imx6ull_dht11"
+#define TOPIC_TEMP  "smart-home/dht11/temperature"
+#define TOPIC_HUMI  "smart-home/dht11/humidity"
+#define TOPIC_LED   "smart-home/led"
+#define QOS         0
+#define TIMEOUT     10000L
 
-#define TOPIC_TEMPERATURE "smart-home/dht11/temperature"
-#define TOPIC_HUMIDITY "smart-home/dht11/humidity"
-#define TOPIC_LED "smart-home/led"
-
-static struct mqtt_client client;
-static uint8_t mqtt_sendbuf[2048];
-static uint8_t mqtt_recvbuf[2048];
-
+static MQTTClient client;
 static int dht11_fd = -1;
 static char g_humi = 0, g_temp = 0;
 static pthread_mutex_t dht11_mutex = PTHREAD_MUTEX_INITIALIZER;
 static int thread_running = 1;
-static int led_req = -1;
 
 static void led_control(const char *cmd)
 {
@@ -55,54 +46,31 @@ static void *dht11_poll_thread(void *arg)
     return NULL;
 }
 
-static void on_publish(void **state, struct mqtt_response_publish *pub)
+static int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message)
 {
-    char topic[128], payload[64];
-    int tl = pub->topic_name_size < 127 ? pub->topic_name_size : 127;
-    int pl = pub->application_message_size < 63 ? pub->application_message_size : 63;
-    memcpy(topic, pub->topic_name, tl); topic[tl] = '\0';
-    memcpy(payload, pub->application_message, pl); payload[pl] = '\0';
-    printf("MQTT recv: %s = %s\n", topic, payload);
-    if (strcmp(topic, TOPIC_LED) == 0) led_control(payload);
-}
-
-static int connect_socket(void)
-{
-    struct sockaddr_in addr;
-    struct hostent *he;
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0) { perror("socket"); return -1; }
-    he = gethostbyname(BROKER_HOST);
-    if (!he) { fprintf(stderr, "gethostbyname failed\n"); close(sock); return -1; }
-    memcpy(&addr.sin_addr, he->h_addr_list[0], he->h_length);
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(BROKER_PORT);
-    if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-        perror("connect"); close(sock); return -1;
+    printf("MQTT recv: %s = %.*s\n", topicName, message->payloadlen, (char*)message->payload);
+    if (strcmp(topicName, TOPIC_LED) == 0) {
+        led_control((char*)message->payload);
     }
-    return sock;
+    MQTTClient_freeMessage(&message);
+    MQTTClient_free(topicName);
+    return 1;
 }
 
-static void my_reconnect(void)
+static void connlost(void *context, char *cause)
 {
-    int sock;
-    do {
-        sock = connect_socket();
-        if (sock < 0) { sleep(3); continue; }
-        mqtt_reinit(&client, sock, mqtt_sendbuf, sizeof(mqtt_sendbuf),
-                    mqtt_recvbuf, sizeof(mqtt_recvbuf));
-        enum MQTTErrors err = mqtt_connect(&client, CLIENT_ID, NULL, NULL, 0,
-                                           NULL, NULL, MQTT_CONNECT_CLEAN_SESSION, 60);
-        if (err != MQTT_OK) { close(sock); sleep(3); sock = -1; }
-    } while (sock < 0);
-    printf("MQTT reconnected\n");
-    mqtt_subscribe(&client, TOPIC_LED, 0);
+    printf("Connection lost: %s\n", cause ? cause : "unknown");
+}
+
+static void delivered(void *context, MQTTClient_deliveryToken dt)
+{
 }
 
 int main(void)
 {
+    MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
     char ts[8], hs[8];
-    time_t last_pub = 0;
+    int rc;
 
     dht11_fd = open(DHT11_DEVICE, O_RDWR | O_NONBLOCK);
     if (dht11_fd < 0) { perror("open dht11"); return -1; }
@@ -111,43 +79,57 @@ int main(void)
     pthread_create(&tid, NULL, dht11_poll_thread, NULL);
     pthread_detach(tid);
 
-    int sock = connect_socket();
-    if (sock < 0) return -1;
+    if ((rc = MQTTClient_create(&client, ADDRESS, CLIENTID,
+         MQTTCLIENT_PERSISTENCE_NONE, NULL)) != MQTTCLIENT_SUCCESS) {
+        printf("Failed to create client, rc=%d\n", rc); return -1;
+    }
 
-    mqtt_init(&client, sock, mqtt_sendbuf, sizeof(mqtt_sendbuf),
-              mqtt_recvbuf, sizeof(mqtt_recvbuf), on_publish);
-    enum MQTTErrors err = mqtt_connect(&client, CLIENT_ID, NULL, NULL, 0,
-                                       NULL, NULL, MQTT_CONNECT_CLEAN_SESSION, 60);
-    if (err != MQTT_OK) { fprintf(stderr, "mqtt_connect failed: %d\n", err); return -1; }
-    printf("MQTT connected as %s\n", CLIENT_ID);
+    if ((rc = MQTTClient_setCallbacks(client, NULL, connlost, msgarrvd, delivered)) != MQTTCLIENT_SUCCESS) {
+        printf("Failed set callbacks, rc=%d\n", rc); return -1;
+    }
 
-    mqtt_subscribe(&client, TOPIC_LED, 0);
-    printf("Subscribed to %s\n", TOPIC_LED);
+    conn_opts.keepAliveInterval = 30;
+    conn_opts.cleansession = 1;
 
-    for (;;) {
-        mqtt_sync(&client);
-        if (client.error != MQTT_OK) {
-            fprintf(stderr, "MQTT error: %d, reconnecting...\n", client.error);
-            my_reconnect();
-            continue;
+    while (1) {
+        if ((rc = MQTTClient_connect(client, &conn_opts)) != MQTTCLIENT_SUCCESS) {
+            printf("Connect failed (rc=%d), retry in 3s...\n", rc);
+            sleep(3); continue;
         }
+        printf("MQTT connected\n");
 
-        time_t now = time(NULL);
-        if (now - last_pub >= 5) {
-            last_pub = now;
+        MQTTClient_subscribe(client, TOPIC_LED, QOS);
+        printf("Subscribed to %s\n", TOPIC_LED);
+
+        while (1) {
             pthread_mutex_lock(&dht11_mutex);
             char h = g_humi, t = g_temp;
             pthread_mutex_unlock(&dht11_mutex);
+
             snprintf(ts, sizeof(ts), "%d", (int)t);
             snprintf(hs, sizeof(hs), "%d", (int)h);
-            if (t != 0 || h != 0) {
-                mqtt_publish(&client, TOPIC_TEMPERATURE, ts, strlen(ts), MQTT_PUBLISH_QOS_0);
-                mqtt_publish(&client, TOPIC_HUMIDITY, hs, strlen(hs), MQTT_PUBLISH_QOS_0);
-                printf("Pub: T=%s H=%s\n", ts, hs);
-            }
+
+            MQTTClient_message pubmsg = MQTTClient_message_initializer;
+            pubmsg.payload = ts;
+            pubmsg.payloadlen = strlen(ts);
+            pubmsg.qos = QOS;
+            if (MQTTClient_publishMessage(client, TOPIC_TEMP, &pubmsg, NULL) != MQTTCLIENT_SUCCESS)
+                printf("pub temp fail\n");
+
+            pubmsg.payload = hs;
+            pubmsg.payloadlen = strlen(hs);
+            if (MQTTClient_publishMessage(client, TOPIC_HUMI, &pubmsg, NULL) != MQTTCLIENT_SUCCESS)
+                printf("pub humi fail\n");
+
+            printf("Pub: T=%s H=%s\n", ts, hs);
+            sleep(5);
         }
-        usleep(100000);
+
+        MQTTClient_disconnect(client, 1000);
+        sleep(3);
     }
+
+    MQTTClient_destroy(&client);
     close(dht11_fd);
     return 0;
 }
