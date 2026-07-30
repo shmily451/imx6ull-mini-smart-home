@@ -1,0 +1,37 @@
+﻿<view class="container">
+  <view class="header">
+    <text class="title">🏠 智能家居监控</text>
+    <text class="subtitle">Smart Home Monitor</text>
+  </view>
+
+  <view class="status-bar">
+    <view class="status-dot {{connected ? 'online' : 'offline'}}"></view>
+    <text class="status-text">{{connected ? '已连接' : '连接中...'}}</text>
+  </view>
+
+  <view class="sensor-card">
+    <view class="sensor-item">
+      <text class="sensor-icon">🌡️</text>
+      <text class="sensor-label">温度</text>
+      <text class="sensor-value">{{temperature}}<text class="sensor-unit">°C</text></text>
+    </view>
+    <view class="sensor-divider"></view>
+    <view class="sensor-item">
+      <text class="sensor-icon">💧</text>
+      <text class="sensor-label">湿度</text>
+      <text class="sensor-value">{{humidity}}<text class="sensor-unit">%</text></text>
+    </view>
+  </view>
+
+  <view class="control-card">
+    <text class="card-title">💡 LED 控制</text>
+    <view class="toggle-row">
+      <text class="toggle-label">开关</text>
+      <switch class="toggle-switch" checked="{{ledOn}}" bindchange="onLedToggle" color="#4CAF50" />
+    </view>
+  </view>
+
+  <view class="footer">
+    <text class="footer-text">MQTT: broker.emqx.io</text>
+  </view>
+</view>
