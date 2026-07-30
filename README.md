@@ -57,7 +57,7 @@
 
 | 开发板实物 | 微信小程序界面 | MQTTX 监控 |
 |---|---|---|
-| ![开发板](./%E5%BC%80%E5%8F%91%E6%9D%BF.jpg) | ![小程序](./%E5%B0%8F%E7%A8%8B%E5%BA%8F.png) | ![MQTTX](./MQTTX.png) |
+| ![开发板](./images/%E5%BC%80%E5%8F%91%E6%9D%BF.jpg) | ![小程序](./images/%E5%B0%8F%E7%A8%8B%E5%BA%8F.png) | ![MQTTX](./images/MQTTX.png) |
 | i.MX6ULL 运行 DHT11 驱动与 MQTT 客户端 | 实时温湿度显示与 LED 远程控制 | 通过 MQTTX 订阅验证温湿度数据 |
 
 ---
