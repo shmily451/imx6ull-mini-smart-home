@@ -83,7 +83,7 @@ static int connect_socket(void)
     return sock;
 }
 
-static void mqtt_reconnect(void)
+static void my_reconnect(void)
 {
     int sock;
     do {
@@ -128,7 +128,7 @@ int main(void)
         mqtt_sync(&client);
         if (client.error != MQTT_OK) {
             fprintf(stderr, "MQTT error: %d, reconnecting...\n", client.error);
-            mqtt_reconnect();
+            my_reconnect();
             continue;
         }
 
