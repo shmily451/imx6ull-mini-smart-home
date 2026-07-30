@@ -53,7 +53,6 @@ Page({
   handleMQTT: function(data) {
     var dv = new DataView(data);
     var ptype = (dv.getUint8(0) >> 4) & 0x0F;
-
     if (ptype === 2) {
       if (dv.getUint8(2) === 0) {
         console.log("MQTT connected");
@@ -152,7 +151,6 @@ function buildConnectPacket() {
   var payload = [];
   payload.push((cid.length >> 8) & 0xFF, cid.length & 0xFF);
   for (var i = 0; i < cid.length; i++) payload.push(cid.charCodeAt(i));
-
   var varHeader = [0x00, 0x04, 0x4D, 0x51, 0x54, 0x54, 0x04, 0x02, 0x00, 0x3C];
   var total = varHeader.length + payload.length;
   var remBytes = encodeRemLen(total);

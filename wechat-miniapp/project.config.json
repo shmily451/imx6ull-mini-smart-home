@@ -1,6 +1,9 @@
 {
   "description": "?????????",
-  "packOptions": { "ignore": [] },
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
   "setting": {
     "bundle": false,
     "userConfirmedBundleSwitch": false,
@@ -29,15 +32,27 @@
     "minifyWXSS": true,
     "showES6CompileOption": false,
     "minifyWXML": true,
-    "babelSetting": { "ignore": [], "disablePlugins": [], "outputPath": "" }
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "compileWorklet": false,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true
   },
   "compileType": "miniprogram",
-  "libVersion": "3.7.9",
-  "appid": "wx43b7fb5fdb7d72ec",
+  "libVersion": "3.17.0",
+  "appid": "your_appid",
   "projectname": "SmartHome",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",
     "tabSize": 2
-  }
+  },
+  "simulatorPluginLibVersion": {}
 }

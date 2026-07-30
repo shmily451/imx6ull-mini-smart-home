@@ -54,3 +54,6 @@ tmp/
 
 # Paho MQTT source (cross-compiled locally, not included)
 paho.mqtt.c/
+
+# WeChat DevTools private config (contains AppID locally)
+project.private.config.json
